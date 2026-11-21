@@ -1,0 +1,102 @@
+
+-- VEREUS V2 - FULL LOCAL CHARACTER RECREATION
+-- Delta / client-side visual only
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local root = character:WaitForChild("HumanoidRootPart")
+
+local old = workspace:FindFirstChild("VereusFull")
+if old then old:Destroy() end
+
+local model = Instance.new("Model")
+model.Name = "VereusFull"
+model.Parent = workspace
+
+local function part(name, size, color, material)
+    local p = Instance.new("Part")
+    p.Name = name
+    p.Size = size
+    p.Color = color
+    p.Material = material or Enum.Material.SmoothPlastic
+    p.Anchored = true
+    p.CanCollide = false
+    p.Parent = model
+    return p
+end
+
+local dark = Color3.fromRGB(18, 10, 25)
+local purple = Color3.fromRGB(145, 0, 255)
+
+-- Floating body
+local torso = part("Vereus Body", Vector3.new(1.5, 2, .8), dark)
+local head = part("Vereus Head", Vector3.new(1.7, 1.7, 1.5), dark)
+
+-- Horns
+local leftHorn = part("Left Horn", Vector3.new(.35, 1.2, .35), purple)
+local rightHorn = part("Right Horn", Vector3.new(.35, 1.2, .35), purple)
+
+-- Eyes
+local eyeL = part("Left Eye", Vector3.new(.22,.22,.1), purple, Enum.Material.Neon)
+local eyeR = part("Right Eye", Vector3.new(.22,.22,.1), purple, Enum.Material.Neon)
+
+-- Floating hands
+local handL = part("Left Hand", Vector3.new(.65,.75,.4), dark)
+local handR = part("Right Hand", Vector3.new(.65,.75,.4), dark)
+
+-- Legs
+local legL = part("Left Leg", Vector3.new(.5,1.2,.5), dark)
+local legR = part("Right Leg", Vector3.new(.5,1.2,.5), dark)
+
+-- Hide original avatar locally
+local originals = {}
+for _, obj in ipairs(character:GetDescendants()) do
+    if obj:IsA("BasePart") then
+        originals[obj] = obj.LocalTransparencyModifier
+        obj.LocalTransparencyModifier = 1
+    elseif obj:IsA("Decal") then
+        originals[obj] = obj.Transparency
+        obj.Transparency = 1
+    end
+end
+
+local connection
+connection = RunService.RenderStepped:Connect(function()
+    if not root.Parent or not model.Parent then
+        connection:Disconnect()
+        return
+    end
+
+    local cf = root.CFrame
+    local t = os.clock()
+    local moving = humanoid.MoveDirection.Magnitude > 0.1
+    local bob = math.sin(t * (moving and 10 or 2)) * .12
+
+    torso.CFrame = cf * CFrame.new(0, 1.5 + bob, 0)
+    head.CFrame = cf * CFrame.new(0, 3 + bob, 0)
+
+    leftHorn.CFrame = head.CFrame * CFrame.new(-.65,.85,0) * CFrame.Angles(0,0,-.35)
+    rightHorn.CFrame = head.CFrame * CFrame.new(.65,.85,0) * CFrame.Angles(0,0,.35)
+
+    eyeL.CFrame = head.CFrame * CFrame.new(-.35,.1,-.76)
+    eyeR.CFrame = head.CFrame * CFrame.new(.35,.1,-.76)
+
+    handL.CFrame = cf * CFrame.new(-1.4, 1.7 + math.sin(t*3)*.2, 0)
+    handR.CFrame = cf * CFrame.new(1.4, 1.7 - math.sin(t*3)*.2, 0)
+
+    legL.CFrame = cf * CFrame.new(-.4,.25 + (moving and math.sin(t*10)*.2 or 0),0)
+    legR.CFrame = cf * CFrame.new(.4,.25 - (moving and math.sin(t*10)*.2 or 0),0)
+end)
+
+-- Purple aura
+local light = Instance.new("PointLight")
+light.Color = purple
+light.Brightness = 2
+light.Range = 12
+light.Parent = head
+
+print("VEREUS V2 LOCAL TRANSFORMATION ACTIVE")
